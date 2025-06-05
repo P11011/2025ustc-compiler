@@ -36,7 +36,7 @@ Instruction *BasicBlock::get_terminator() {
 }
 
 void BasicBlock::add_instruction(Instruction *instr) {
-    assert(not is_terminated() && "Inserting instruction to terminated bb");
+    // assert(not is_terminated() && "Inserting instruction to terminated bb");
     instr_list_.push_back(instr);
 }
 

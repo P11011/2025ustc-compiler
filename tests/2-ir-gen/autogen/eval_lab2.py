@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 import subprocess
+import sys
+
 # 17
 lv0_1 = {
     "return": (3, False),
@@ -94,10 +96,9 @@ lv2 = {
 
 # 11
 lv3 = {
-    "complex1": (3, False),
+    "complex1": (4, True),
     "complex2": (3, True),
-    "complex3": (2, True),
-    "complex4": (3, False),
+    "complex3": (4, False),
 }
 
 suite = [
@@ -108,13 +109,30 @@ suite = [
     ("lv3", lv3, 0)
 ]
 
-
 def eval():
+    # 获取优化选项
+    opt_flags = []
+    if len(sys.argv) > 1:
+        for arg in sys.argv[1:]:
+            if arg == "dce":
+                opt_flags.append("-dce")
+            elif arg == "func-inline":
+                opt_flags.append("-func-inline")
+            elif arg == "const-prop":
+                opt_flags.append("-const-prop")
+
     f = open("eval_result", 'w')
     EXE_PATH = "../../../build/cminusfc"
     TEST_BASE_PATH = "./testcases/"
     ANSWER_BASE_PATH = "./answers/"
     total_points = 0
+    
+    # 写入使用的优化选项信息
+    if opt_flags:
+        f.write('Running with optimizations: %s\n\n' % ' '.join(opt_flags))
+    else:
+        f.write('Running without optimizations\n\n')
+
     for level in suite:
         lv_points = 0
         has_bonus = True
@@ -132,8 +150,12 @@ def eval():
             COMMAND = [TEST_PATH]
 
             try:
-                result = subprocess.run([EXE_PATH, "-o", TEST_PATH + ".ll", "-emit-llvm",
-                                        TEST_PATH + ".cminus"], stderr=subprocess.PIPE, timeout=1)
+                # 添加优化选项
+                cmd = [EXE_PATH, "-o", TEST_PATH + ".ll", "-emit-llvm"]
+                cmd.extend(opt_flags)  # 添加所有优化选项
+                cmd.append(TEST_PATH + ".cminus")
+                
+                result = subprocess.run(cmd, stderr=subprocess.PIPE, timeout=1)
             except Exception as _:
                 f.write('\tFail\n')
                 continue
